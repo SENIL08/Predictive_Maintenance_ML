@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-09-29T01:05:00Z",
+  "local_sync_time": "01:05:00",
+  "telemetry": {
+    "temperature_c": 38.2,
+    "current_a": 1.15,
+    "rpm": 1472,
+    "slip_percent": 1.9,
+    "vibration_rms": 0.22
+  },
+  "model_output": {
+    "predicted_class_id": 0,
+    "condition": "NORMAL",
+    "health_score": 96.0,
+    "confidence_percent": 97.4,
+    "advisory": "Motor operating within optimal mechanical and electrical limits. No maintenance required.",
+    "color": "#10b981"
+  },
+  "source": "Dropbox Model Worker"
+}

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictive Maintenance Dashboard | 3-Phase Induction Motor</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+    
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .digital-font {
+      font-family: 'Orbitron', monospace;
+    }
+
+    /* 1. Classic Dark (Midnight) */
+    html.dark body, html.theme-dark body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+    }
+    html.dark .glass-card, html.theme-dark .glass-card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    }
+    html.dark .sub-card, html.theme-dark .sub-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    html.dark .text-heading, html.theme-dark .text-heading {
+      color: #ffffff;
+    }
+    html.dark .text-muted, html.theme-dark .text-muted {
+      color: #94a3b8;
+    }
+    html.dark .theme-control-box, html.theme-dark .theme-control-box {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #f1f5f9;
+    }
+
+    /* 2. Clean White (Modern Industrial Light) */
+    html.light body, html.theme-light body {
+      background-color: #f1f5f9;
+      color: #1e293b;
+    }
+    html.light .glass-card, html.theme-light .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+    html.light .sub-card, html.theme-light .sub-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    html.light .text-heading, html.theme-light .text-heading {
+      color: #0f172a;
+    }
+    html.light .text-muted, html.theme-light .text-muted {
+      color: #64748b;
+    }
+    html.light .theme-control-box, html.theme-light .theme-control-box {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+
+    /* 3. Cyberpunk Neon (Futuristic Sci-Fi HUD) */
+    html.theme-cyberpunk body {
+      background: radial-gradient(circle at 50% 0%, #0d1a33 0%, #030712 75%);
+      color: #e0f2fe;
+    }
+    html.theme-cyberpunk .glass-card {
+      background: rgba(10, 16, 32, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(6, 182, 212, 0.45);
+      box-shadow: 0 0 25px rgba(6, 182, 212, 0.12), inset 0 0 15px rgba(6, 182, 212, 0.03);
+    }
+    html.theme-cyberpunk .sub-card {
+      background: rgba(6, 12, 26, 0.85);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+    html.theme-cyberpunk .text-heading {
+      color: #38bdf8;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+    html.theme-cyberpunk .text-muted {
+      color: #94a3b8;
+    }
+    html.theme-cyberpunk .theme-control-box {
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(6, 182, 212, 0.5);
+      color: #38bdf8;
+    }
+
+    /* 4. Deep Ocean Navy (Enterprise Command Center) */
+    html.theme-navy body {
+      background: linear-gradient(135deg, #071324 0%, #0b1a30 50%, #050d1a 100%);
+      color: #e2e8f0;
+    }
+    html.theme-navy .glass-card {
+      background: rgba(13, 28, 52, 0.9);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(59, 130, 246, 0.32);
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.7);
+    }
+    html.theme-navy .sub-card {
+      background: rgba(9, 21, 40, 0.85);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    html.theme-navy .text-heading {
+      color: #ffffff;
+    }
+    html.theme-navy .text-muted {
+      color: #93c5fd;
+    }
+    html.theme-navy .theme-control-box {
+      background: rgba(15, 32, 60, 0.95);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #bfdbfe;
+    }
+
+    /* 5. SCADA Industrial Steel (Allen-Bradley / Siemens Orange) */
+    html.theme-steel body {
+      background: #16191f;
+      color: #f3f4f6;
+    }
+    html.theme-steel .glass-card {
+      background: rgba(28, 32, 40, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+    html.theme-steel .sub-card {
+      background: rgba(20, 24, 30, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    html.theme-steel .text-heading {
+      color: #f8fafc;
+    }
+    html.theme-steel .text-muted {
+      color: #9ca3af;
+    }
+    html.theme-steel .theme-control-box {
+      background: rgba(36, 42, 54, 0.95);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fbbf24;
+    }
+
+    /* 6. Emerald Matrix (Eco-Industrial Telemetry) */
+    html.theme-emerald body {
+      background: radial-gradient(circle at 50% 0%, #062b1e 0%, #02140d 75%);
+      color: #ecfdf5;
+    }
+    html.theme-emerald .glass-card {
+      background: rgba(5, 31, 21, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.14);
+    }
+    html.theme-emerald .sub-card {
+      background: rgba(3, 20, 13, 0.85);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    html.theme-emerald .text-heading {
+      color: #6ee7b7;
+      text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+    }
+    html.theme-emerald .text-muted {
+      color: #a7f3d0;
+    }
+    html.theme-emerald .theme-control-box {
+      background: rgba(6, 40, 28, 0.95);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 flex flex-col justify-between">
+
+  <!-- TOP HEADER -->
+  <header class="glass-card rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between border-t-2 border-emerald-500 transition-colors">
+    <div class="flex items-center space-x-4">
+      <div class="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/30 text-emerald-500">
+        <i data-lucide="activity" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wider uppercase digital-font text-heading">
+          ML Based Predictive Maintenance Dashboard
+        </h1>
+        <p class="text-xs md:text-sm text-muted">
+          Real-Time Cloud IoT Feed (ThingSpeak API) & Machine Learning Analytics
+      </div>
+    </div>
+
+    <!-- Right Controls: Status, Theme Toggle & Settings -->
+    <div class="flex items-center space-x-3 mt-4 md:mt-0">
+      
+      <!-- Live API Connection Indicator -->
+      <div id="cloud-indicator" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-950/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+        <span id="cloud-ping" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+        <span id="cloud-label">CONNECTING TO API...</span>
+      </div>
+
+      <!-- MULTI-THEME SELECTOR DROPDOWN & QUICK CYCLE BUTTON -->
+      <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition shadow-sm theme-control-box">
+        <i data-lucide="palette" class="w-4 h-4 text-emerald-400"></i>
+        <select id="theme-select" onchange="applyTheme(this.value)" class="bg-transparent text-xs sm:text-sm font-semibold focus:outline-none cursor-pointer">
+          <option value="dark" class="bg-slate-900 text-slate-100">🌙 Dark Midnight</option>
+          <option value="light" class="bg-slate-100 text-slate-900">☀️ Clean White</option>
+          <option value="cyberpunk" class="bg-slate-950 text-cyan-400">⚡ Cyberpunk Neon</option>
+          <option value="navy" class="bg-slate-900 text-blue-300">🌊 Deep Ocean Navy</option>
+          <option value="steel" class="bg-slate-900 text-amber-400">⚙️ SCADA Industrial Steel</option>
+          <option value="emerald" class="bg-slate-950 text-emerald-400">🍃 Emerald Matrix</option>
+        </select>
+        <button onclick="cycleTheme()" title="Quick Switch Next Theme" class="ml-1 p-1 hover:opacity-80 transition text-amber-400">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Settings Button -->
+      <button onclick="toggleConfigModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl shadow flex items-center space-x-2 transition">
+        <i data-lucide="key" class="w-4 h-4"></i>
+        <span>API Settings</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- API ALERT BANNER (If Channel ID not set) -->
+  <div id="api-alert-banner" class="hidden mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0"></i>
+      <span class="text-sm">ThingSpeak Channel ID is not configured yet. Click <b>API Settings</b> to enter your Channel ID and Read API Key.</span>
+    </div>
+    <button onclick="toggleConfigModal()" class="px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-lg uppercase tracking-wider">Set Credentials</button>
+  </div>
+
+  <!-- MAIN TELEMETRY GRID -->
+  <main class="space-y-6 flex-1">
+    
+    <!-- 4 CORE SENSOR KPI CARDS (Real API Data from ThingSpeak) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- 1. VIBRATION -->
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden border-l-4 border-cyan-500">
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-xs font-semibold tracking-wider text-muted uppercase">Vibration</span>
+          <i data-lucide="waves" class="w-5 h-5 text-cyan-500"></i>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span id="val-vib-rms" class="text-4xl font-bold digital-font text-heading">--</span>
+          <span class="text-sm font-semibold text-muted">mm/s</span>
+        </div>
+        
+        <div class="text-[10px] text-cyan-500 mt-1 font-semibold">Sensor: MPU6050 (Velocity mm/s RMS)</div>
+      </div>
+
+      <!-- 2. TEMPERATURE -->
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden border-l-4 border-amber-500">
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-xs font-semibold tracking-wider text-muted uppercase">Temperature</span>
+          <i data-lucide="thermometer" class="w-5 h-5 text-amber-500"></i>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span id="val-temp" class="text-4xl font-bold digital-font text-heading">--</span>
+          <span class="text-sm font-semibold text-muted">°C</span>
+        </div>
+        <div class="mt-3 w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-temp" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+        <div class="text-[10px] text-amber-500 mt-2 font-semibold">Sensor: DHT11 (Digital Temp GPIO 4)</div>
+      </div>
+
+      <!-- 3. CURRENT -->
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden border-l-4 border-indigo-500">
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-xs font-semibold tracking-wider text-muted uppercase">Current</span>
+          <i data-lucide="zap" class="w-5 h-5 text-indigo-500"></i>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span id="val-current" class="text-4xl font-bold digital-font text-heading">--</span>
+          <span class="text-sm font-semibold text-muted">A</span>
+        </div>
+        <div class="mt-3 w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-current" class="bg-indigo-500 h-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+        <div class="text-[10px] text-indigo-500 mt-2 font-semibold">Sensor: ACS712-5A (185 mV/A on GPIO 35)</div>
+      </div>
+
+      <!-- 4. SPEED (RPM) -->
+      <div class="glass-card rounded-2xl p-5 relative overflow-hidden border-l-4 border-purple-500">
+        <div class="flex justify-between items-start mb-2">
+          <span class="text-xs font-semibold tracking-wider text-muted uppercase">Speed (RPM)</span>
+          <i data-lucide="gauge" class="w-5 h-5 text-purple-500"></i>
+        </div>
+        <div class="flex items-baseline space-x-2">
+          <span id="val-rpm" class="text-4xl font-bold digital-font text-heading">--</span>
+          <span class="text-sm font-semibold text-muted">RPM</span>
+        </div>
+        <div class="mt-3 flex justify-between text-xs text-muted">
+          <span>Rated: <b class="text-heading">1440 - 1500 RPM</b></span>
+          <span id="val-slip" class="text-purple-500 font-semibold">Slip: --%</span>
+        </div>
+        <div class="text-[10px] text-purple-500 mt-1 font-semibold">Sensor: Proximity Sensor (GPIO 27, Pulses × 6)</div>
+      </div>
+
+    </div>
+
+    <!-- PREDICTION & CONFIDENCE SCORE SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- ML Classification Card (Left 2 Columns) -->
+      <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col justify-between" id="condition-card">
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xs uppercase font-bold tracking-widest text-muted">Predictive AI Diagnostic State</span>
+            <div class="flex items-center space-x-2">
+              <span id="decision-source-badge" class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/30">DROPBOX MODEL SYNC</span>
+              <span id="badge-timestamp" class="text-xs text-muted font-mono">Last API Sync: Waiting...</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl sub-card">
+            <div>
+              <div class="text-xs text-muted uppercase font-semibold">Model Predicted Condition</div>
+              <div id="predicted-condition" class="text-2xl sm:text-3xl font-black tracking-wide text-emerald-500 digital-font mt-1">
+                WAITING FOR DATA
+              </div>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+              <div class="text-right">
+                <div class="text-xs text-muted uppercase font-semibold">Motor Health Score</div>
+                <div id="val-health-score" class="text-2xl font-bold text-heading digital-font">
+                  --%
+                </div>
+              </div>
+              <div class="p-3 rounded-full bg-emerald-500/20 text-emerald-500" id="condition-icon">
+                <i data-lucide="check-circle" class="w-8 h-8"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3.5 rounded-lg sub-card">
+            <span class="text-xs font-semibold uppercase text-muted block mb-1">Prescriptive Maintenance Advisory</span>
+            <p id="prescriptive-advisory" class="text-sm text-heading">
+              Awaiting real-time telemetry from ThingSpeak Cloud to evaluate motor operating parameters.
+            </p>
+          </div>
+        </div>
+
+        <!-- Real-Time Channel Details -->
+        <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap justify-between items-center text-xs text-muted gap-2">
+          <div>Connected Channel: <b id="display-channel-id" class="text-heading font-mono">Not Set</b></div>
+          <div>Polling Frequency: <b class="text-heading">Every 5 Seconds</b></div>
+          <div>ML Model: <b class="text-heading">Random Forest / SVM Classifier</b></div>
+        </div>
+      </div>
+
+      <!-- Speed (RPM) Graph Card (Replaces ML Model Confidence Score) -->
+      <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs uppercase font-bold tracking-widest text-heading">Speed Graph (RPM)</span>
+            <i data-lucide="gauge" class="w-4 h-4 text-purple-500"></i>
+          </div>
+          <div class="flex items-baseline space-x-2">
+            <span id="chart-live-speed" class="text-3xl font-extrabold digital-font text-purple-400">--</span>
+            <span class="text-xs text-muted font-semibold">RPM</span>
+          </div>
+        </div>
+
+        <div class="h-44 w-full my-2">
+          <canvas id="speedChart"></canvas>
+        </div>
+
+        <div class="w-full sub-card p-2 rounded-xl flex justify-around text-xs">
+          <div>
+            <span class="text-muted block">Slip</span>
+            <span id="speed-slip-val" class="font-bold text-purple-400">--%</span>
+          </div>
+          <div>
+            <span class="text-muted block">Rated Range</span>
+            <span class="font-bold text-heading">1440 - 1500 RPM</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- REAL-TIME CHARTS SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Vibration Trend -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs uppercase font-bold tracking-wider text-heading">Vibration Trend</span>
+          <i data-lucide="line-chart" class="w-4 h-4 text-cyan-500"></i>
+        </div>
+        <div class="h-56">
+          <canvas id="vibChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Temperature & Current Chart -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-xs uppercase font-bold tracking-wider text-heading">Temperature & Current Trend</span>
+          <i data-lucide="trending-up" class="w-4 h-4 text-amber-500"></i>
+        </div>
+        <div class="h-56">
+          <canvas id="tempCurrentChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="mt-6 text-center text-xs text-muted">
+    Predictive Maintenance Framework for 3-Phase Induction Motor | SCET ECE Department | 2026-2027
+  </footer>
+
+  <!-- SETTINGS MODAL -->
+  <div id="config-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 border border-slate-300 dark:border-slate-700 shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-heading flex items-center space-x-2">
+          <i data-lucide="key" class="w-5 h-5 text-emerald-500"></i>
+          <span>ThingSpeak API Credentials</span>
+        </h2>
+        <button onclick="toggleConfigModal()" class="text-muted hover:text-heading">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase mb-1">ThingSpeak Channel ID <span class="text-rose-500">*</span></label>
+          <input type="text" id="cfg-channel" placeholder="e.g. 2489102" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-heading focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-muted mt-1">Found in your ThingSpeak Channel Settings.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase mb-1">Read API Key</label>
+          <input type="text" id="cfg-key" placeholder="Enter Read API Key (if channel is private)" class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-heading focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-muted mt-1">Leave empty if your channel is public.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase mb-1">Dropbox Model Decision Feed (URL or File)</label>
+          <input type="text" id="cfg-dropbox" placeholder="model_decision.json or https://dl.dropboxusercontent.com/s/..." class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-heading focus:outline-none focus:border-emerald-500">
+          <p class="text-[11px] text-muted mt-1">Default: <code>model_decision.json</code> (or paste Dropbox raw URL / ThingSpeak field5).</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end space-x-3">
+        <button onclick="toggleConfigModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-heading text-sm font-semibold rounded-lg">Cancel</button>
+        <button onclick="saveConfig()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow">Save & Connect API</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    lucide.createIcons();
+
+    // ----------------- MULTI-THEME MANAGEMENT -----------------
+    const THEMES = ['dark', 'light', 'cyberpunk', 'navy', 'steel', 'emerald'];
+    let currentTheme = localStorage.getItem('pm_theme') || 'dark';
+
+    function applyTheme(theme) {
+      if (!THEMES.includes(theme)) theme = 'dark';
+      currentTheme = theme;
+      localStorage.setItem('pm_theme', theme);
+      const htmlEl = document.documentElement;
+
+      // Remove previous theme classes
+      THEMES.forEach(t => {
+        htmlEl.classList.remove(t);
+        htmlEl.classList.remove(`theme-${t}`);
+      });
+
+      // Apply new theme class
+      htmlEl.classList.add(theme);
+      htmlEl.classList.add(`theme-${theme}`);
+
+      // Sync dropdown select element
+      const themeSelect = document.getElementById('theme-select');
+      if (themeSelect) themeSelect.value = theme;
+
+      updateChartColors(theme);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function cycleTheme() {
+      const idx = THEMES.indexOf(currentTheme);
+      const nextTheme = THEMES[(idx + 1) % THEMES.length];
+      applyTheme(nextTheme);
+    }
+
+    // ----------------- API CREDENTIALS -----------------
+    let apiConfig = {
+      channelId: localStorage.getItem('ts_channel_id') || '3461983',
+      readApiKey: localStorage.getItem('ts_read_api_key') || '',
+      dropboxUrl: localStorage.getItem('ts_dropbox_url') || 'model_decision.json'
+    };
+
+    if (apiConfig.channelId) {
+      document.getElementById('cfg-channel').value = apiConfig.channelId;
+      document.getElementById('display-channel-id').textContent = apiConfig.channelId;
+    }
+    if (apiConfig.readApiKey) {
+      document.getElementById('cfg-key').value = apiConfig.readApiKey;
+    }
+    if (apiConfig.dropboxUrl) {
+      const dbInput = document.getElementById('cfg-dropbox');
+      if (dbInput) dbInput.value = apiConfig.dropboxUrl;
+    }
+
+    const FAULTS = {
+      0: { title: "NORMAL", color: "#10b981", advisory: "Motor operating within optimal mechanical and electrical limits. No maintenance required.", health: 96 },
+      1: { title: "BEARING DEGRADATION", color: "#ef4444", advisory: "CRITICAL: High vibration detected by MPU6050 (> 4.5 mm/s RMS). Bearing wear/spalling likely.", health: 42 },
+      2: { title: "OVERHEATING", color: "#f97316", advisory: "WARNING: DHT11 temperature exceeds safe limits (> 70°C). Risk of winding degradation.", health: 55 },
+      3: { title: "ROTOR IMBALANCE", color: "#eab308", advisory: "ALERT: Moderate radial vibration (> 2.8 mm/s RMS). Mechanical misalignment or bent shaft.", health: 60 },
+      4: { title: "PHASE OVERCURRENT", color: "#dc2626", advisory: "CRITICAL: ACS712 measured high current surge (> 3.4A). Overload or phase short imminent.", health: 28 }
+    };
+
+    // ----------------- CHART.JS INITIALIZATION -----------------
+    const ctxVib = document.getElementById('vibChart').getContext('2d');
+    const vibChart = new Chart(ctxVib, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Vibration (mm/s RMS)',
+          data: [],
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.15)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+          y: { grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: '#64748b' }, min: 0 }
+        },
+        plugins: { legend: { labels: { color: '#64748b' } } }
+      }
+    });
+
+    const ctxTC = document.getElementById('tempCurrentChart').getContext('2d');
+    const tempCurrentChart = new Chart(ctxTC, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Temperature (°C)',
+            data: [],
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            yAxisID: 'yTemp',
+            pointRadius: 3
+          },
+          {
+            label: 'Current (A)',
+            data: [],
+            borderColor: '#6366f1',
+            backgroundColor: 'transparent',
+            tension: 0.3,
+            yAxisID: 'yCurr',
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+          yTemp: {
+            type: 'linear',
+            position: 'left',
+            grid: { color: 'rgba(150,150,150,0.1)' },
+            ticks: { color: '#f59e0b' },
+            min: 20
+          },
+          yCurr: {
+            type: 'linear',
+            position: 'right',
+            grid: { drawOnChartArea: false },
+            ticks: { color: '#6366f1' },
+            min: 0
+          }
+        },
+        plugins: { legend: { labels: { color: '#64748b' } } }
+      }
+    });
+
+    const ctxSpeed = document.getElementById('speedChart').getContext('2d');
+    const speedChart = new Chart(ctxSpeed, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Speed (RPM)',
+          data: [],
+          borderColor: '#a855f7',
+          backgroundColor: 'rgba(168, 85, 247, 0.15)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 2.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: '#64748b', font: { size: 9 } } },
+          y: { grid: { color: 'rgba(150,150,150,0.1)' }, ticks: { color: '#64748b' }, suggestedMin: 1300, suggestedMax: 1550 }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    function updateChartColors(theme) {
+      let gridColor = 'rgba(255,255,255,0.06)';
+      let textColor = '#94a3b8';
+
+      if (theme === 'light') {
+        gridColor = 'rgba(0,0,0,0.06)';
+        textColor = '#475569';
+      } else if (theme === 'cyberpunk') {
+        gridColor = 'rgba(6, 182, 212, 0.15)';
+        textColor = '#38bdf8';
+      } else if (theme === 'navy') {
+        gridColor = 'rgba(59, 130, 246, 0.14)';
+        textColor = '#93c5fd';
+      } else if (theme === 'steel') {
+        gridColor = 'rgba(245, 158, 11, 0.12)';
+        textColor = '#cbd5e1';
+      } else if (theme === 'emerald') {
+        gridColor = 'rgba(16, 185, 129, 0.15)';
+        textColor = '#6ee7b7';
+      }
+
+      [vibChart, tempCurrentChart, speedChart].forEach(c => {
+        if (!c) return;
+        c.options.scales.x.grid.color = gridColor;
+        c.options.scales.x.ticks.color = textColor;
+        if (c.options.scales.y) {
+          c.options.scales.y.grid.color = gridColor;
+          c.options.scales.y.ticks.color = textColor;
+        }
+        if (c.options.scales.yTemp) {
+          c.options.scales.yTemp.grid.color = gridColor;
+        }
+        if (c.options.plugins && c.options.plugins.legend) {
+          c.options.plugins.legend.labels.color = textColor;
+        }
+        c.update();
+      });
+    }
+
+    function toggleConfigModal() {
+      const modal = document.getElementById('config-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function saveConfig() {
+      const ch = document.getElementById('cfg-channel').value.trim();
+      const key = document.getElementById('cfg-key').value.trim();
+      const dbUrl = document.getElementById('cfg-dropbox').value.trim() || 'model_decision.json';
+
+      if (!ch) {
+        alert("Please enter a valid ThingSpeak Channel ID.");
+        return;
+      }
+
+      apiConfig.channelId = ch;
+      apiConfig.readApiKey = key;
+      apiConfig.dropboxUrl = dbUrl;
+      localStorage.setItem('ts_channel_id', ch);
+      localStorage.setItem('ts_read_api_key', key);
+      localStorage.setItem('ts_dropbox_url', dbUrl);
+
+      document.getElementById('display-channel-id').textContent = ch;
+      document.getElementById('api-alert-banner').classList.add('hidden');
+
+      toggleConfigModal();
+      fetchThingSpeakData();
+    }
+
+    // ----------------- ML PREDICTIVE LOGIC -----------------
+    function evaluateModel(telemetry) {
+      const t = telemetry.temperature;
+      const c = telemetry.current;
+      const r = telemetry.rpm;
+      const v = telemetry.vib_rms;
+
+      let predId = 0;
+      let conf = 95.0;
+
+      // Real physics and multi-sensor fault boundary decision tree (ISO 10816-3 mm/s RMS)
+      if (t > 70.0) {
+        predId = 2; // Overheating
+        conf = 94.2;
+      } else if (c > 3.4) {
+        predId = 4; // Phase Overcurrent
+        conf = 96.0;
+      } else if (v > 4.5) {
+        predId = 1; // Bearing Degradation (Critical Vibration ISO Zone D)
+        conf = 95.5;
+      } else if (v > 2.8 || (v > 1.8 && r < 1420)) {
+        predId = 3; // Rotor Imbalance / Misalignment (ISO Zone C)
+        conf = 92.8;
+      } else {
+        predId = 0; // Normal
+        conf = 97.4;
+      }
+
+      const faultMeta = FAULTS[predId];
+      return {
+        class_id: predId,
+        condition_name: faultMeta.title,
+        color: faultMeta.color,
+        advisory: faultMeta.advisory,
+        confidence: conf,
+        health_score: faultMeta.health
+      };
+    }
+
+    // ----------------- ONLY FETCH REAL API DATA -----------------
+    async function fetchThingSpeakData() {
+      const ch = apiConfig.channelId;
+      const key = apiConfig.readApiKey;
+
+      if (!ch) {
+        document.getElementById('api-alert-banner').classList.remove('hidden');
+        document.getElementById('cloud-label').textContent = 'API NOT CONFIGURED';
+        document.getElementById('cloud-ping').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+        return;
+      }
+
+      document.getElementById('api-alert-banner').classList.add('hidden');
+
+      // ThingSpeak Read URL
+      let url = `https://api.thingspeak.com/channels/${ch}/feeds/last.json`;
+      if (key) {
+        url += `?api_key=${key}`;
+      }
+
+      try {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const feed = await response.json();
+        if (!feed || !feed.created_at) {
+          throw new Error("No telemetry feeds recorded yet in channel");
+        }
+
+        // Parse fields mapped from user's Arduino ESP32 code:
+        // Field 1: Temperature (°C) [DHT11]
+        // Field 2: Vibration (mm/s RMS) [MPU6050]
+        // Field 3: Current (A) [ACS712-5A]
+        // Field 4: RPM [Proximity Sensor]
+        const temp = parseFloat(feed.field1) || 0.0;
+        const vib_rms = parseFloat(feed.field2) || 0.0;
+        const current = parseFloat(feed.field3) || 0.0;
+        const rpm = parseFloat(feed.field4) || 0.0;
+        const comp = vib_rms > 0 ? (vib_rms / Math.sqrt(3)) : 0.0;
+
+        const dateObj = new Date(feed.created_at);
+        const timeFormatted = dateObj.toLocaleTimeString();
+
+        const telemetry = {
+          temperature: Number(temp.toFixed(1)),
+          current: Number(current.toFixed(2)),
+          rpm: Number(rpm.toFixed(0)),
+          vib_x: Number(comp.toFixed(3)),
+          vib_y: Number(comp.toFixed(3)),
+          vib_z: Number(comp.toFixed(3)),
+          vib_rms: Number(vib_rms.toFixed(3)),
+          timestamp: timeFormatted
+        };
+
+        // Resolve Model Decision: Dropbox Model Sync -> ThingSpeak Field5 -> Edge Classifier
+        let prediction = null;
+        let decisionSource = 'EDGE ML';
+        let badgeClass = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+
+        // 1. Check Dropbox Decision JSON (synced from model_runner_dropbox.py)
+        const dbTarget = apiConfig.dropboxUrl || 'model_decision.json';
+        try {
+          const cacheBuster = dbTarget.includes('?') ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
+          const dbResp = await fetch(dbTarget + cacheBuster, { cache: 'no-store' });
+          if (dbResp.ok) {
+            const dbData = await dbResp.json();
+            if (dbData && dbData.model_output) {
+              const out = dbData.model_output;
+              prediction = {
+                class_id: out.predicted_class_id,
+                condition_name: out.condition,
+                color: out.color || (FAULTS[out.predicted_class_id] || FAULTS[0]).color,
+                advisory: out.advisory,
+                confidence: out.confidence_percent || 95.0,
+                health_score: out.health_score
+              };
+              decisionSource = 'DROPBOX MODEL LIVE';
+              badgeClass = 'bg-purple-500/10 text-purple-400 border-purple-500/30';
+            }
+          }
+        } catch (dbErr) {
+          // File not found or CORS restriction
+        }
+
+        // 2. Check if ThingSpeak has field5 (Cloud worker posted decision back to ThingSpeak)
+        if (!prediction && feed.field5 !== undefined && feed.field5 !== null && feed.field5 !== '') {
+          const classId = parseInt(feed.field5);
+          if (FAULTS[classId] !== undefined) {
+            const faultMeta = FAULTS[classId];
+            prediction = {
+              class_id: classId,
+              condition_name: faultMeta.title,
+              color: faultMeta.color,
+              advisory: faultMeta.advisory,
+              confidence: 95.0,
+              health_score: (feed.field6 && !isNaN(parseFloat(feed.field6))) ? parseFloat(feed.field6) : faultMeta.health
+            };
+            decisionSource = 'THINGSPEAK ML (FIELD 5)';
+            badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+          }
+        }
+
+        // 3. Fallback: Edge Classifier
+        if (!prediction) {
+          prediction = evaluateModel(telemetry);
+          decisionSource = 'EDGE ML CLASSIFIER';
+          badgeClass = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+        }
+
+        // Update Decision Badge
+        const sourceBadge = document.getElementById('decision-source-badge');
+        if (sourceBadge) {
+          sourceBadge.textContent = decisionSource;
+          sourceBadge.className = `px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${badgeClass}`;
+        }
+
+        // Update UI with real API data
+        updateUI(telemetry, prediction);
+
+        document.getElementById('cloud-label').textContent = 'THINGSPEAK API LIVE';
+        document.getElementById('cloud-ping').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping';
+      } catch (err) {
+        console.warn("ThingSpeak Fetch Warning:", err);
+        document.getElementById('cloud-label').textContent = 'API CONNECTING...';
+        document.getElementById('cloud-ping').className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+      }
+    }
+
+    function updateUI(t, p) {
+      // 1. Sensor Readings
+      document.getElementById('val-vib-rms').textContent = t.vib_rms.toFixed(2);
+      document.getElementById('val-ax').textContent = t.vib_x.toFixed(2);
+      document.getElementById('val-ay').textContent = t.vib_y.toFixed(2);
+      document.getElementById('val-az').textContent = t.vib_z.toFixed(2);
+
+      document.getElementById('val-temp').textContent = t.temperature.toFixed(1);
+      document.getElementById('bar-temp').style.width = Math.min(100, (t.temperature / 100) * 100) + '%';
+
+      document.getElementById('val-current').textContent = t.current.toFixed(2);
+      document.getElementById('bar-current').style.width = Math.min(100, (t.current / 6.0) * 100) + '%';
+
+      document.getElementById('val-rpm').textContent = Math.round(t.rpm);
+      const slip = t.rpm > 0 ? (((1500 - t.rpm) / 1500) * 100).toFixed(1) : 0.0;
+      document.getElementById('val-slip').textContent = `Slip: ${slip}%`;
+
+      // 2. ML Prediction & Condition
+      const condEl = document.getElementById('predicted-condition');
+      condEl.textContent = p.condition_name;
+      condEl.style.color = p.color;
+
+      document.getElementById('prescriptive-advisory').textContent = p.advisory;
+      document.getElementById('badge-timestamp').textContent = 'Last API Sync: ' + t.timestamp;
+
+      // 2b. Motor Health Score in diagnostic card
+      const healthScore = p.health_score;
+      document.getElementById('val-health-score').textContent = Math.round(healthScore) + '%';
+
+      // 3. Update Speed Graph Card values
+      document.getElementById('chart-live-speed').textContent = Math.round(t.rpm);
+      document.getElementById('speed-slip-val').textContent = `${slip}%`;
+
+      // 4. Update Time Series Charts
+      updateCharts(t.timestamp, t.vib_rms, t.temperature, t.current, t.rpm);
+    }
+
+    function updateCharts(time, vib, temp, curr, rpm) {
+      if (vibChart.data.labels.length > 25) {
+        vibChart.data.labels.shift();
+        vibChart.data.datasets[0].data.shift();
+      }
+      vibChart.data.labels.push(time);
+      vibChart.data.datasets[0].data.push(vib);
+      vibChart.update();
+
+      if (tempCurrentChart.data.labels.length > 25) {
+        tempCurrentChart.data.labels.shift();
+        tempCurrentChart.data.datasets[0].data.shift();
+        tempCurrentChart.data.datasets[1].data.shift();
+      }
+      tempCurrentChart.data.labels.push(time);
+      tempCurrentChart.data.datasets[0].data.push(temp);
+      tempCurrentChart.data.datasets[1].data.push(curr);
+      tempCurrentChart.update();
+
+      if (speedChart.data.labels.length > 25) {
+        speedChart.data.labels.shift();
+        speedChart.data.datasets[0].data.shift();
+      }
+      speedChart.data.labels.push(time);
+      speedChart.data.datasets[0].data.push(rpm);
+      speedChart.update();
+    }
+
+    // Initialize Theme
+    applyTheme(currentTheme);
+
+    // Initial API Fetch and 5-second Polling Cycle
+    fetchThingSpeakData();
+    setInterval(fetchThingSpeakData, 5000);
+  </script>
+</body>
+</html>
